@@ -10,10 +10,13 @@
 */
 #include <Arduino.h>
 #include "Speedometer.h"
+#include "SwitecX12.h"
 
 double speed;
 double distanceTraveledBuffer;
 double tickCount;
+
+SwitecX12 speedo(STEPS, A_STEP, A_DIR);
 
 //******************************************************************
 //  Timer2 Interrupt Service is invoked by hardware Timer 2 every 4 ms = 250 Hz
@@ -76,6 +79,9 @@ void Speedometer::setup() {
   // start Timer 1
   // External clock source on T1 pin (D5). Clock on rising edge.
   TCCR1B =  bit (CS10) | bit (CS11) | bit (CS12);
+
+  digitalWrite(RESET, HIGH);
+  speedo.zero();
 }
 
 void Speedometer::loop() {
@@ -94,5 +100,11 @@ void Speedometer::incrementOdometer(double distanceTraveled) {
 }
 
 void Speedometer::indicateSpeed(double speed) {
-  // Update speedometer stepper position
+  int position = STEPS * speed/100;
+
+  if (speedo.stopped) {
+    speedo.setPosition(position);
+  }
+
+  speedo.update();
 }
