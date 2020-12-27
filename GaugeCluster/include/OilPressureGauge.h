@@ -197,7 +197,8 @@ const double psiTable[190] = {
 class OilPressureGauge {
     public:
         OilPressureGauge();
-        double getPressure();
+        void setup();
+        void loop();
     private:
 };
 

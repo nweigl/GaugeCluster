@@ -8,7 +8,10 @@
 OilPressureGauge::OilPressureGauge() {
 }
 
-double OilPressureGauge::getPressure() {
+void OilPressureGauge::setup() {
+}
+
+void OilPressureGauge::loop() {
     uint16_t x = analogRead(OIL_PRESSURE_PIN);
     int resistance = (OIL_PRESSURE_RREF * x) / (1024.0 - x);
     double psi;
@@ -23,6 +26,4 @@ double OilPressureGauge::getPressure() {
     else {
         psi = psiTable[resistance - OIL_PRESSURE_RMIN];
     }
-
-    return psi;
 }

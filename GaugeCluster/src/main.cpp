@@ -6,15 +6,12 @@ OilPressureGauge oilPressureGauge;
 Speedometer speedometer;
 
 void setup () {
-  Serial.begin(9600);       
+  Serial.begin(9600); 
+  speedometer.setup();
+  oilPressureGauge.setup();      
 }
 
 void loop () {
-  double psi = oilPressureGauge.getPressure();
-  int speed = speedometer.getSpeed();
-  Serial.print("Oil PSI: ");
-  Serial.println(psi);
-  Serial.print("Speed: ");
-  Serial.println(speed);
-  delay(1000);
+  speedometer.loop();
+  oilPressureGauge.loop();
 }
