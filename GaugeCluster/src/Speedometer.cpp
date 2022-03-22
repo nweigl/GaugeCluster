@@ -9,14 +9,19 @@
     main program loop interval.
 */
 #include <Arduino.h>
+#include <EEPROM.h>
+#include "DataDisplay.h"
 #include "Speedometer.h"
 #include "SwitecX12.h"
 
 double speed;
+double rpm;
 double distanceTraveledBuffer;
 double tickCount;
 
 SwitecX12 speedo(STEPS, A_STEP, A_DIR);
+SwitecX12 tach(STEPS, F_STEP, F_DIR);
+DataDisplay dataDisplay;
 
 //******************************************************************
 //  Timer2 Interrupt Service is invoked by hardware Timer 2 every 4 ms = 250 Hz
@@ -29,6 +34,7 @@ ISR (TIMER2_COMPA_vect) {
   }
 
   unsigned int pulses = TCNT1;
+  unsigned int tachPulses = TCNT0;
 
   // Calculate derived values.
   double distanceTraveled = (pulses / PULSES_PER_FOOT);
@@ -37,7 +43,11 @@ ISR (TIMER2_COMPA_vect) {
   // convert feet/half-second to MPH.
   speed = distanceTraveled * 1.364;
 
+  // convert pulses/half-second to RPM
+  rpm = tachPulses * 120;
+
   // Reset counters.
+  TCNT0 = 0;
   TCNT1 = 0;
   TCNT2 = 0;
   tickCount = 0;
@@ -50,11 +60,16 @@ void Speedometer::setup() {
   // Intialize Timer 2 frequency divider.
   tickCount = 0;
 
-  // reset Timer 1 and Timer 2
+  // Reset rimers
+  TCCR0A = 0;
+  TCCR0B = 0;
   TCCR1A = 0;             
   TCCR1B = 0;              
   TCCR2A = 0;
   TCCR2B = 0;
+
+  // Timer 0 - counts events on pin D4
+  TIMSK0 = bit (TOIE0);   // interrupt on Timer 0 overflow
 
   // Timer 1 - counts events on pin D5
   TIMSK1 = bit (TOIE1);   // interrupt on Timer 1 overflow
@@ -69,7 +84,8 @@ void Speedometer::setup() {
   // Timer 2 - interrupt on match (ie. every 1 ms)
   TIMSK2 = bit (OCIE2A);   // enable Timer2 Interrupt
 
-  TCNT1 = 0;      // Both counters to zero
+  TCNT0 = 0;
+  TCNT1 = 0;
   TCNT2 = 0;     
 
   // Reset prescalers
@@ -77,11 +93,16 @@ void Speedometer::setup() {
   // start Timer 2
   TCCR2B =  bit (CS21) | bit (CS22) ;  // prescaler of 256
   // start Timer 1
+  // External clock source on T0 pin (D4). Clock on rising edge.
+  TCCR0B =  bit (CS00) | bit (CS01) | bit (CS02);
+  // start Timer 1
   // External clock source on T1 pin (D5). Clock on rising edge.
   TCCR1B =  bit (CS10) | bit (CS11) | bit (CS12);
 
-  digitalWrite(RESET, HIGH);
   speedo.zero();
+  tach.zero();
+  dataDisplay.setup();
+  dataDisplay.drawOdometer(getCurrentMileage());
 }
 
 void Speedometer::loop() {
@@ -89,14 +110,26 @@ void Speedometer::loop() {
   {
     double distanceTraveled = distanceTraveledBuffer;
     distanceTraveledBuffer = 0;
-    incrementOdometer(distanceTraveled);
+    incrementOdometer();
   }
 
   indicateSpeed(speed);
+  indicateRPM(rpm);
 }
 
-void Speedometer::incrementOdometer(double distanceTraveled) {
-  // Update odometer stepper position.
+void Speedometer::incrementOdometer() {
+  long initialMiles = 0;
+  int writeIndex = 0;
+  long milesTraveledThisIndex = 0;
+  EEPROM.get(EEPROM_WRITE_INDEX, writeIndex);
+  int currentIndexAddress = INITIAL_MILEAGE_ADDRESS + EEPROM_WRITE_INDEX + sizeof(int) + (writeIndex * sizeof(long));
+
+  EEPROM.get(currentIndexAddress, milesTraveledThisIndex);
+  EEPROM.put(currentIndexAddress, milesTraveledThisIndex + 1);
+
+  if (milesTraveledThisIndex = 99999) {
+    EEPROM.put(EEPROM_WRITE_INDEX, writeIndex + 1);
+  }
 }
 
 void Speedometer::indicateSpeed(double speed) {
@@ -107,4 +140,34 @@ void Speedometer::indicateSpeed(double speed) {
   }
 
   speedo.update();
+}
+
+void Speedometer::indicateRPM(double rpm) {
+  int position = STEPS * rpm/5000;
+
+  if (tach.stopped) {
+    tach.setPosition(position);
+  }
+
+  tach.update();
+}
+
+long Speedometer::getCurrentMileage() {
+  long initialMiles = 0;
+  int writeIndex = 0;
+  long milesTraveledThisIndex = 0;
+  EEPROM.get(INITIAL_MILEAGE_ADDRESS, initialMiles);
+  EEPROM.get(EEPROM_WRITE_INDEX, writeIndex);
+  int currentIndexAddress = INITIAL_MILEAGE_ADDRESS + EEPROM_WRITE_INDEX + sizeof(int) + (writeIndex * sizeof(long));
+  EEPROM.get(currentIndexAddress, milesTraveledThisIndex);
+  long milesTraveled = (writeIndex * 10000) + milesTraveledThisIndex;
+  return initialMiles + milesTraveled;
+}
+
+void Speedometer::inititalizeEEPROM(long initialMileage) {
+  for (int i = 0; i < 512; i++) {
+    EEPROM.write(i, 0);
+  }
+
+  EEPROM.put(INITIAL_MILEAGE_ADDRESS, (long)initialMileage);
 }

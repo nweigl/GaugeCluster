@@ -2,7 +2,7 @@
 #include "OilPressureGauge.h"
 #include "SwitecX12.h"
 
-#define OIL_PRESSURE_PIN 0
+#define OIL_PRESSURE_PIN A0
 #define OIL_PRESSURE_RREF 200
 #define OIL_PRESSURE_RMAX 200
 #define OIL_PRESSURE_RMIN 11
@@ -13,7 +13,6 @@ OilPressureGauge::OilPressureGauge() {
 }
 
 void OilPressureGauge::setup() {
-    digitalWrite(RESET, HIGH);
     oil.zero();
 }
 

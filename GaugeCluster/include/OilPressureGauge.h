@@ -2,9 +2,8 @@
 #define OILPRESSUREGAUGE_H
 
 #define STEPS 3780
-#define B_STEP 6
-#define B_DIR 7
-#define RESET 10
+#define B_STEP 11
+#define B_DIR 12
 
 const double psiTable[190] = {
     0,
