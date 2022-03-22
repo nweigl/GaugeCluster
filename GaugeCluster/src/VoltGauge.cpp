@@ -3,8 +3,8 @@
 #include "SwitecX12.h"
 
 #define VOLT_PIN A3
-#define VOLT_R1 200
-#define VOLT_R2 200
+#define VOLT_R1 15000
+#define VOLT_R2 7500
 #define VOLT_MAX 15
 
 SwitecX12 volt(STEPS, E_STEP, E_DIR);
