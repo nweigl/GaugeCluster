@@ -9,7 +9,7 @@ class FuelGauge {
     public:
         FuelGauge();
         void setup();
-        void loop();
+        void indicateFuel(int fuelPercentage);
     private:
 };
 

@@ -2,11 +2,6 @@
 #include "VoltGauge.h"
 #include "SwitecX12.h"
 
-#define VOLT_PIN A3
-#define VOLT_R1 15000
-#define VOLT_R2 7500
-#define VOLT_MAX 15
-
 SwitecX12 volt(STEPS, E_STEP, E_DIR);
 
 VoltGauge::VoltGauge() {
@@ -16,11 +11,17 @@ void VoltGauge::setup() {
     volt.zero();
 }
 
-void VoltGauge::loop() {
+void VoltGauge::indicateVoltage(int volts) {    
     if (volt.stopped) {
-        uint16_t x = analogRead(VOLT_PIN);
-        double volts = x * 5115 * ((VOLT_R1 + VOLT_R2)/VOLT_R2);
-        int position = STEPS * volts/VOLT_MAX;
+        if (volts > 15) {
+            volts = 15;
+        }
+
+        if (volts < 8) {
+            volts = 8;
+        }
+        
+        int position = STEPS * volts/15;
         volt.setPosition(position);
     }
 

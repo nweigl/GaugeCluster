@@ -16,23 +16,16 @@ void OilPressureGauge::setup() {
     oil.zero();
 }
 
-void OilPressureGauge::loop() {
+void OilPressureGauge::indicatePsi(double psi) {    
     if (oil.stopped) {
-        uint16_t x = analogRead(OIL_PRESSURE_PIN);
-        int resistance = (OIL_PRESSURE_RREF * x) / (1024.0 - x);
-        double psi;
-        if (resistance <= OIL_PRESSURE_RMIN)
-        {
-            psi = psiTable[0];
-        }
-        else if (resistance >= OIL_PRESSURE_RMAX)
-        {
-            psi = psiTable[OIL_PRESSURE_RMAX - OIL_PRESSURE_RMIN];
-        }
-        else {
-            psi = psiTable[resistance - OIL_PRESSURE_RMIN];
+        if (psi > 80) {
+            psi = 80;
         }
 
+        if (psi < 0) {
+            psi = 0;
+        }
+        
         int position = STEPS * psi/80;
         oil.setPosition(position);
     }

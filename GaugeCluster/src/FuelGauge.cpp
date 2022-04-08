@@ -16,24 +16,17 @@ void FuelGauge::setup() {
     fuel.zero();
 }
 
-void FuelGauge::loop() {
+void FuelGauge::indicateFuel(int fuelPercentage) {
     if (fuel.stopped) {
-        uint16_t x = analogRead(FUEL_PIN);
-        int resistance = (FUEL_RREF * x) / (1024.0 - x);
-        double fuelPercentage;
-        if (resistance <= FUEL_RMIN)
-        {
+        if (fuelPercentage > 100) {
+            fuelPercentage = 100;
+        }
+        
+        if (fuelPercentage < 0) {
             fuelPercentage = 0;
         }
-        else if (resistance >= FUEL_RMAX)
-        {
-            fuelPercentage = 1;
-        }
-        else {
-            fuelPercentage = resistance / FUEL_RMAX;
-        }
-
-        int position = STEPS * fuelPercentage;
+        
+        int position = STEPS * fuelPercentage/100;
         fuel.setPosition(position);
     }
 
