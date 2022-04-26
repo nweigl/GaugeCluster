@@ -1,7 +1,7 @@
 #ifndef WATERTEMPGAUGE_H
 #define WATERTEMPGAUGE_H
 
-#define STEPS 3780
+#define STEPS 1100
 #define C_STEP 6
 #define C_DIR 7
 

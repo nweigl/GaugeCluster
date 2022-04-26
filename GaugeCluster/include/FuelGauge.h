@@ -1,7 +1,7 @@
 #ifndef FUELGAUGE_H
 #define FUELGAUGE_H
 
-#define STEPS 3780
+#define STEPS 1100
 #define D_STEP 2
 #define D_DIR 3
 

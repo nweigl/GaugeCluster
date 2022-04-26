@@ -1,7 +1,7 @@
 #ifndef OILPRESSUREGAUGE_H
 #define OILPRESSUREGAUGE_H
 
-#define STEPS 3780
+#define STEPS 800
 #define B_STEP 11
 #define B_DIR 12
 

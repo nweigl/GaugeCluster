@@ -1,7 +1,7 @@
 #ifndef VOLTGAUGE_H
 #define VOLTGAUGE_H
 
-#define STEPS 3780
+#define STEPS 1100
 #define E_STEP 4
 #define E_DIR 5
 
