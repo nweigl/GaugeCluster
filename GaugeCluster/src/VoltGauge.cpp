@@ -2,7 +2,7 @@
 #include "VoltGauge.h"
 #include "SwitecX12.h"
 
-SwitecX12 volt(STEPS, E_STEP, E_DIR);
+SwitecX12 volt(E_STEPS, E_STEP, E_DIR);
 
 VoltGauge::VoltGauge() {
 }
@@ -21,7 +21,7 @@ void VoltGauge::indicateVoltage(int volts) {
             volts = 8;
         }
         
-        int position = STEPS * volts/15;
+        int position = E_STEPS * volts/15;
         volt.setPosition(position);
     }
 

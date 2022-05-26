@@ -2,7 +2,7 @@
 #include "WaterTempGauge.h"
 #include "SwitecX12.h"
 
-SwitecX12 water(STEPS, C_STEP, C_DIR);
+SwitecX12 water(C_STEPS, C_STEP, C_DIR);
 
 WaterTempGauge::WaterTempGauge() {
 }
@@ -23,7 +23,7 @@ void WaterTempGauge::indicateTemp(int temp) {
             temp = 69;
         }
 
-        int position = STEPS * (temp - 69)/143;
+        int position = C_STEPS * (temp - 69)/143;
         water.setPosition(position);
     }
 

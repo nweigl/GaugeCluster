@@ -3,7 +3,7 @@
 #include "Speedometer.h"
 #include "SwitecX12.h"
 
-SwitecX12 speedo(STEPS, A_STEP, A_DIR);
+SwitecX12 speedo(A_STEPS, A_STEP, A_DIR);
 DataDisplay dataDisplay;
 
 Speedometer::Speedometer() {
@@ -24,7 +24,7 @@ void Speedometer::indicateSpeed(int speed) {
       speed = 0;
     }
     
-    int position = STEPS * speed/100;
+    int position = A_STEPS * speed/100;
     speedo.setPosition(position);
   }
 

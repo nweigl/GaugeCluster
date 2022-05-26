@@ -1,9 +1,9 @@
 #ifndef VOLTGAUGE_H
 #define VOLTGAUGE_H
 
-#define STEPS 1100
-#define E_STEP 4
-#define E_DIR 5
+#define E_STEPS 1100
+#define E_STEP 8
+#define E_DIR 9
 
 class VoltGauge {
     public:

@@ -7,7 +7,7 @@
 #define OIL_PRESSURE_RMAX 200
 #define OIL_PRESSURE_RMIN 11
 
-SwitecX12 oil(STEPS, B_STEP, B_DIR);
+SwitecX12 oil(B_STEPS, B_STEP, B_DIR);
 
 OilPressureGauge::OilPressureGauge() {
 }
@@ -26,7 +26,7 @@ void OilPressureGauge::indicatePsi(double psi) {
             psi = 0;
         }
         
-        int position = STEPS * psi/80;
+        int position = B_STEPS * psi/80;
         oil.setPosition(position);
     }
 

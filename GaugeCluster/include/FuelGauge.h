@@ -1,9 +1,9 @@
 #ifndef FUELGAUGE_H
 #define FUELGAUGE_H
 
-#define STEPS 1100
-#define D_STEP 2
-#define D_DIR 3
+#define D_STEPS 1100
+#define D_STEP 1
+#define D_DIR 0
 
 class FuelGauge {
     public:

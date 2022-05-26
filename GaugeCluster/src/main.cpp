@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <SPI.h>
 #include "OilPressureGauge.h"
 #include "FuelGauge.h"
 #include "WaterTempGauge.h"
@@ -6,13 +7,13 @@
 #include "Speedometer.h"
 #include "Tach.h"
 #include "DataDisplay.h"
+#include "mcp2515_can.h"
 
 #define RESET 10
+#define CAN_2515
 
-const byte numChars = 34;
-char receivedChars[numChars]; // Format is "<speed>,<mileage>,<rpm>,<fuel>,<oil>,<water>,<volts>\n"
-                              // max          999,9999999,9999,999,99.99,999,99
-boolean newData = false;
+const int SPI_CS_PIN = 15;
+const int CAN_INT_PIN = 2;
 
 OilPressureGauge oilPressureGauge;
 FuelGauge fuelGauge;
@@ -21,11 +22,24 @@ VoltGauge voltGauge;
 Speedometer speedometer;
 Tach tachometer;
 
-void recvWithEndMarker();
+mcp2515_can CAN(SPI_CS_PIN); // Set CS pin
+
+unsigned char flagRecv = 0;
+unsigned char len = 0;
+unsigned char buf[8];
+
 void displayValues();
 
+void MCP2515_ISR() {
+    flagRecv = 1;
+}
+
 void setup () {
-  Serial.begin(9600);
+  attachInterrupt(digitalPinToInterrupt(CAN_INT_PIN), MCP2515_ISR, FALLING); // start interrupt
+  while (CAN_OK != CAN.begin(CAN_500KBPS)) {             // init can bus : baudrate = 500k
+    delay(100);
+  }
+
   digitalWrite(RESET, HIGH);
   speedometer.setup();
   tachometer.setup();
@@ -36,57 +50,55 @@ void setup () {
 }
 
 void loop() {
-  recvWithEndMarker();
-  displayValues();
-}
+  if (flagRecv) {
+    flagRecv = 0;  
 
-void recvWithEndMarker() {
-  static byte ndx = 0;
-  char endMarker = '\n';
-  char rc;
+    while (CAN_MSGAVAIL == CAN.checkReceive()) {
+      CAN.readMsgBuf(&len, buf);
+      int id = CAN.getCanId();
 
-  while (Serial.available() > 0 && newData == false) {
-    rc = Serial.read(); 
-    if (rc != endMarker) {
-      receivedChars[ndx] = rc;
-      ndx++;
-      if (ndx >= numChars) {
-        ndx = numChars - 1;
+      switch (id) {
+        case 0x0c8:
+        {
+          int voltage = buf[0];
+          voltGauge.indicateVoltage(voltage);
+          break;
+        }
+        case 0x0c9:
+        {
+          // Tach
+          int rpm = buf[2] << 8 | buf[3];
+          tachometer.indicateRPM(rpm);
+          break;
+        }
+        case 0x4d1:
+        {
+          // Oil Pressure / Fuel
+          int oil = buf[3] * 0.766;
+          int fuel = buf[6] * 100 / 255;
+          oilPressureGauge.indicatePsi(oil);
+          fuelGauge.indicateFuel(fuel);
+          break;
+        }
+        case 0x4c1:
+        {
+          // Water Temp
+          int temp = ((buf[3] - 40) * 1.8) + 32;
+          waterTempGauge.indicateTemp(temp);
+          break;
+        }
+        case 0x3e9:
+        {
+          // Speedometer
+          long mileage = (long)buf[0] << 24 | (long)buf[1] << 16 | (long)buf[2] << 8 | (long)buf[3];
+          int speed = (buf[5] << 8 | buf[6]) / 100;
+          speedometer.indicateSpeed(speed);
+          speedometer.indicateMileage(mileage);
+          break;
+        }
+        default:
+          break;
       }
     }
-    else {
-      receivedChars[ndx] = '\0'; // terminate the string
-      ndx = 0;
-      newData = true;
-    }
-  }
-}
-
-void displayValues() {
-  if (newData == true) {
-    char * strtokIndx; // this is used by strtok() as an index
-  
-    strtokIndx = strtok(receivedChars,",");
-    speedometer.indicateSpeed(atoi(strtokIndx));
-
-    strtokIndx = strtok(NULL, ",");
-    speedometer.indicateMileage(atol(strtokIndx));
-
-    strtokIndx = strtok(NULL, ",");
-    tachometer.indicateRPM(atoi(strtokIndx));
-
-    strtokIndx = strtok(NULL, ",");
-    fuelGauge.indicateFuel(atoi(strtokIndx));
-
-    strtokIndx = strtok(NULL, ",");
-    oilPressureGauge.indicatePsi(atof(strtokIndx));
-
-    strtokIndx = strtok(NULL, ",");
-    waterTempGauge.indicateTemp(atoi(strtokIndx));
-
-    strtokIndx = strtok(NULL, ",");
-    voltGauge.indicateVoltage(atoi(strtokIndx)); 
-
-    newData = false;
   }
 }

@@ -2,7 +2,7 @@
 #include "Tach.h"
 #include "SwitecX12.h"
 
-SwitecX12 tach(STEPS, F_STEP, F_DIR);
+SwitecX12 tach(F_STEPS, F_STEP, F_DIR);
 
 Tach::Tach() {
 }
@@ -21,7 +21,7 @@ void Tach::indicateRPM(int rpm) {
       rpm = 0;
     }
     
-    int position = STEPS * rpm/5000;
+    int position = F_STEPS * rpm/5000;
     tach.setPosition(position);
   }
 

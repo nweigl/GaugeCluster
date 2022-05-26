@@ -7,7 +7,7 @@
 #define FUEL_RMAX 90
 #define FUEL_RMIN 0
 
-SwitecX12 fuel(STEPS, D_STEP, D_DIR);
+SwitecX12 fuel(D_STEPS, D_STEP, D_DIR);
 
 FuelGauge::FuelGauge() {
 }
@@ -26,7 +26,7 @@ void FuelGauge::indicateFuel(int fuelPercentage) {
             fuelPercentage = 0;
         }
         
-        int position = STEPS * fuelPercentage/100;
+        int position = D_STEPS * fuelPercentage/100;
         fuel.setPosition(position);
     }
 

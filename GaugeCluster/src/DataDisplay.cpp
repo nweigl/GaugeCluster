@@ -7,7 +7,7 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include <Adafruit_I2CDevice.h>
-#include <Fonts/FreeSerifBold12pt7b.h>>
+#include <Fonts/FreeSerifBold12pt7b.h>
 #include <string.h>
 #include "DataDisplay.h"
 
