@@ -49,6 +49,21 @@ void setup () {
   voltGauge.setup();    
 }
 
+typedef struct {
+  uint8_t volts;
+  uint8_t water;
+  uint8_t fuel;
+  uint8_t oil;
+  uint8_t paddding[4];
+} SmallGauges, *PSmallGauges;
+
+typedef struct {
+  uint8_t speed;
+  uint16_t rpm;
+  uint32_t mileage;
+  uint8_t padding;
+} LargeGauges, *PLargeGauges;
+
 void loop() {
   if (flagRecv) {
     flagRecv = 0;  
@@ -58,42 +73,30 @@ void loop() {
       int id = CAN.getCanId();
 
       switch (id) {
-        case 0x0c8:
-        {
-          int voltage = buf[0];
-          voltGauge.indicateVoltage(voltage);
-          break;
-        }
-        case 0x0c9:
-        {
-          // Tach
-          int rpm = buf[2] << 8 | buf[3];
-          tachometer.indicateRPM(rpm);
-          break;
-        }
         case 0x4d1:
         {
-          // Oil Pressure / Fuel
-          int oil = buf[3] * 0.766;
-          int fuel = buf[6] * 100 / 255;
+          // Oil Pressure / Fuel / Water / Voltage
+          PSmallGauges gauges = (PSmallGauges)buf;
+          int oil = gauges->oil;
+          int fuel = gauges->fuel;
+          int temp = gauges->water;
+          int voltage = gauges->volts;
+          voltGauge.indicateVoltage(voltage);
+          waterTempGauge.indicateTemp(temp);
           oilPressureGauge.indicatePsi(oil);
           fuelGauge.indicateFuel(fuel);
           break;
         }
-        case 0x4c1:
-        {
-          // Water Temp
-          int temp = ((buf[3] - 40) * 1.8) + 32;
-          waterTempGauge.indicateTemp(temp);
-          break;
-        }
         case 0x3e9:
         {
-          // Speedometer
-          long mileage = (long)buf[0] << 24 | (long)buf[1] << 16 | (long)buf[2] << 8 | (long)buf[3];
-          int speed = (buf[5] << 8 | buf[6]) / 100;
+          // Speedometer / Tach
+          PLargeGauges gauges = (PLargeGauges)buf;
+          long mileage = gauges->mileage;
+          int speed = gauges->speed;
+          int rpm = gauges->rpm;
           speedometer.indicateSpeed(speed);
           speedometer.indicateMileage(mileage);
+          tachometer.indicateRPM(rpm);
           break;
         }
         default:
